@@ -24,6 +24,12 @@ sub _load_icon_images {
 	html	    => 'builtin:iRealPro',
       );
 
+    if ( $env->{all} ) {
+	$idef{biab} = 'builtin:BandInABox';
+	$idef{jpg}  = 'builtin:JPG';
+	$idef{png}  = 'builtin:PNG';
+	$idef{pdf}  = 'builtin:PDF';
+    }
     foreach ( keys %{ $env->{icons} } ) {
 	if ( $env->{icons}->{$_} ) {
 	    $idef{$_} = $env->{icons}->{$_};

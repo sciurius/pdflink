@@ -4,13 +4,13 @@ package App::PDF::Link;
 
 # pdflink -- insert file links in PDF documents
 
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Mon Dec 12 19:51:49 2016
-# Update Count    : 283
+# Last Modified On: Tue Dec 13 15:47:42 2016
+# Update Count    : 300
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -83,12 +83,14 @@ sub linktargets {
     my $gfx;			# graphics content
     my $x;			# current x for icon
     my $y;			# current y for icon
+    my $did;
 
     foreach ( @targets ) {
 	unless ( -r $_ ) {
 	    warn("\tTarget: ", encode_utf8($_), " missing (skipped)\n");
 	    next;
 	}
+	$did++;
 
 	my $t = substr( $_, length(File::Spec->catpath($v, $d||"", "") ) );
 	( my $ext = $t ) =~ s;^.*\.(\w+)$;$1;;
@@ -167,10 +169,13 @@ sub linktargets {
 	$pdf->saveas($env->{outpdf});
 	warn("Wrote: ", $env->{outpdf}, "\n") if $env->{verbose};
     }
-    else {
+    elsif ( $did ) {
 	warn("Updating PDF $pdfname...\n") if $env->{verbose};
 	$pdf->update;
 	warn("Wrote: $pdfname\n") if $env->{verbose};
+    }
+    else {
+	warn("Not modified: $pdfname\n") if $env->{verbose};
     }
 }
 
@@ -259,6 +264,7 @@ sub app_setup {
     my ( $pkg, $appname, $appversion, %args ) = @_;
     my $help = 0;		# handled locally
     my $ident = 0;		# handled locally
+    my $man = 0;		# handled locally
 
     # Package name.
     $my_package = $args{package};
@@ -301,7 +307,15 @@ sub app_setup {
        _argv		=> [ @ARGV ],
       };
 
-    # Colled command line options in a hash, for they will be needed
+    my $pod2usage = sub {
+        # Load Pod::Usage only if needed.
+        require Pod::Usage;
+        require Pod::Find;
+        Pod::Usage->import;
+        &pod2usage( -input => Pod::Find::pod_where({-inc => 1}, __PACKAGE__), @_ );
+    };
+
+    # Collect command line options in a hash, for they will be needed
     # later.
     my $clo = {};
 
@@ -326,25 +340,28 @@ sub app_setup {
 	  # Standard options.
 	  'ident'		=> \$ident,
 	  'help|?'		=> \$help,
+	  'manual'		=> \$man,
 	  'verbose',
 	  'trace',
 	  'debug',
 	 ) )
     {
-	# GNU convention: message to STDERR upon failure.
-	app_usage(\*STDERR, 2);
+	$pod2usage->(2);
     }
     # GNU convention: message to STDOUT upon request.
-    app_usage(\*STDOUT, 0) if $help;
-    app_ident(\*STDOUT) if $ident;
+    app_ident(\*STDOUT) if $ident or $help;
+    if ( $man or $help ) {
+	$pod2usage->(1) if $help;
+	$pod2usage->(VERBOSE => 2) if $man;
+    }
 
     if ( @{ $clo->{targets} } ) {
 	@{ $clo->{targets} } = split( /[;,]/, join(":", @{ $clo->{targets} }) );
-	app_usage(\*STDERR, 1) unless @ARGV;
-	app_usage(\*STDERR, 1) if $clo->{pdf} && @ARGV > 1;
+	$pod2usage->(1) unless @ARGV;
+	$pod2usage->(1) if $clo->{pdf} && @ARGV > 1;
     }
     else {
-	app_usage(\*STDERR, 1) if @ARGV < 1 || @ARGV > 2;
+	$pod2usage->(1) if @ARGV < 1 || @ARGV > 2;
     }
 
     # Plug in command-line options.
@@ -360,42 +377,6 @@ sub app_ident {
 		 ? "$my_package [$my_name $my_version]"
 		 : "$my_name version $my_version",
 		 "\n");
-}
-
-sub app_usage {
-    my ($fh, $exit) = @_;
-    app_ident($fh);
-    print ${fh} <<EndOfUsage;
-Usage: $0 [options]
-    --pdf=XXX		name of the new PDF (default __new__.pdf)
-    --embed		embed the data files instead of linking
-    --xpos=NN		X-position for links
-    --ypos=NN		Y-position for links relative to top
-    --iconsize=NN	size of the icons, default 50
-    --icons=type=XXX	add icon image XXX for this type
-    --padding=NN	padding between icons, default 0
-    --vertical		stacks icons vertically
-    --border		draws a border around the links
-    --gfunder		draws the images behind the page
-    --targets=XXX	specifies the target(s) to link to
-
-Miscellaneous options:
-    --help		this message
-    --ident		show identification
-    --verbose		verbose information
-EndOfUsage
-    exit $exit if defined $exit;
-}
-
-sub app_config {
-    my ($options, $opts, $config) = @_;
-    return if $opts->{"no$config"};
-    my $cfg = $opts->{$config};
-    return unless defined $cfg && -s $cfg;
-    my $verbose = $opts->{verbose} || $opts->{trace} || $opts->{debug};
-    warn("Loading $config: $cfg\n") if $verbose;
-
-    # Process config data, filling $options ...
 }
 
 =head1 NAME
@@ -586,6 +567,67 @@ The directory to process. Defaults to the current directory.
 
 =back
 
+=head1 ICONS
+
+B<pdflink> has a number of icons built-in for common file types.
+Associations between a filename extension and an icon can be made with
+the B<--icons> command line option.
+
+For example,
+
+  --icons=pdf=builtin:PDF
+
+This will associate the built-in icon PDF with filename extension C<pdf>.
+
+Alternatively, an image file may be specified to add user defined icons.
+
+  --icons=pdf=builtin:myicons/pdficon.png
+
+The following icons are built-in. By default, only MuseScore and
+iRealPro icons are associated and all other filename extensions will
+be skipped. When pdflink is run with command line option B<--all>, all
+built-in icons will be associated and all matching files will get
+linked.
+
+=over
+
+=item PDF
+
+Associated to filename extension C<pdf> (generic PDF document).
+
+=item PNG
+
+Associated to filename extension C<png> (PNG image).
+
+=item JPG
+
+Associated to filename extensions C<jpg> and C<jpeg> (JPG image).
+
+=item MuseScore
+
+Associated to filename extension C<mscz> (MuseScore document).
+
+=item iRealPro
+
+Associated to filename extension C<html> (iRealPro link in HTML document).
+
+While technically this is wrong, this is the way iRealPro data is
+handled on Android and iPad.
+
+=item BandInABox
+
+Associated to filename extensions C<mgu>, C<mg1> and so on (Band-In-A-Box document).
+
+=item Document
+
+Fallback icon for unknown filename extensions.
+
+=item Border
+
+Alternative fallback icon for unknown filename extensions.
+
+=back
+
 =head1 LIMITATIONS
 
 Some PDF files cannot be processed. If this happens, try converting
@@ -598,6 +640,9 @@ Unknown extensions will get an empty square box instead of an icon.
 
 Since colon C<:> and slash C</> are not allowed in file names, they
 are replaced with C<@> characters.
+
+If the icons come out at the wrong place or upside down, try
+B<--gfunder>.
 
 =head1 AUTHOR
 
@@ -650,12 +695,12 @@ sub annotation_xx {
 
 package PDF::API2::Annotation;
 
-=item $ant->fileattachment $file, %opts 
-
-Defines the annotation as a file attachment with file $file and
-options %opts (-rect, -border, -content (type), -icon (name)).
-
-=cut
+#=item $ant->fileattachment $file, %opts 
+#
+#Defines the annotation as a file attachment with file $file and
+#options %opts (-rect, -border, -content (type), -icon (name)).
+#
+#=cut
 
 sub fileattachment {
     my ( $self, $file, %opts ) = @_;
