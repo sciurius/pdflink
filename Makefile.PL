@@ -14,7 +14,7 @@ my $version = MM->parse_version($master);
 
 WriteMakefile(
  NAME           => 'App::PDF::Link',
- ABSTRACT_FROM  => $master,
+ ABSTRACT       => 'Utility to insert file links into PDF documents',
  VERSION	=> "$version",
  AUTHOR	        => 'Johan Vromans <jvromans@squirrel.nl>',
 
