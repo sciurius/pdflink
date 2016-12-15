@@ -94,6 +94,7 @@ sub get_icon {
     return;
 }
 
-
+# For testing.
+sub __icons { \%icons };
 
 1;

@@ -1,5 +1,10 @@
 Revision history for App-PDF-Link
 
+0.17    2016-12-15
+
+	CPAN packaging fixes.
+	Add t/01-icons.t.
+
 0.16    2016-12-15
 
 	First CPAN release.

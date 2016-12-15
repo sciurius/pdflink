@@ -15,3 +15,4 @@ lib/App/PDF/Link/Icons/iRealPro.pm
 script/pdflink.pl
 script/pp.PL
 t/00-load.t
+t/01-icons.t

@@ -43,6 +43,21 @@ WriteMakefile(
 	     web  => 'https://github.com/sciurius/pdflink',
          },
      },
+     provides         => {
+	 pdflink => { file => "script/pdflink",
+		       version => $version },
+	 "App::PDF::Link"
+		  => { file => "lib/App/PDF/Link.pm",
+		       version => $version },
+     },
+     no_index         => {
+         directory => [
+	    "lib/App/PDF/Link",
+	 ],
+         namespace => [
+	    "PDF::API2",
+	 ],
+     },
  },
 
 );
