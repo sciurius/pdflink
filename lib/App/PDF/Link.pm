@@ -4,13 +4,13 @@ package App::PDF::Link;
 
 # pdflink -- insert file links in PDF documents
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Thu Dec 15 09:42:15 2016
-# Update Count    : 302
+# Last Modified On: Mon Mar 20 09:36:20 2017
+# Update Count    : 316
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -84,6 +84,7 @@ sub linktargets {
     my $x;			# current x for icon
     my $y;			# current y for icon
     my $did;
+    my $embed = $env->{embed};
 
     foreach ( @targets ) {
 	unless ( -r $_ ) {
@@ -95,10 +96,14 @@ sub linktargets {
 	my $t = substr( $_, length(File::Spec->catpath($v, $d||"", "") ) );
 	( my $ext = $t ) =~ s;^.*\.(\w+)$;$1;;
 	my $p = get_icon( $env, $pdf, $ext );
+	my $action =
+	  $p
+	    ? $embed
+	      ? $embed == 2 ? "attached" : "embedded"
+	      : "linked"
+	    : "ignored";
 
 	if ( $env->{verbose} ) {
-	    my $action =
-	      $p ? $env->{embed} ? "embedded" : "linked" : "ignored";
 	    warn("\tFile: ", encode_utf8($t), " ($action)\n");
 	}
 	next unless $p;
@@ -107,7 +112,7 @@ sub linktargets {
 	my $dy = $env->{iconsz} + $env->{padding};
 
 	unless ( $page ) {
-	    $page = $pdf->openpage(1);
+	    $page = $pdf->openpage($pageno);
 	    my @m = $page->get_mediabox;
 	    if ( $env->{xpos} >= 0 ) {
 		$x = $m[0] + $env->{xpos};
@@ -131,16 +136,19 @@ sub linktargets {
 	    # the graphics may be misplaced/scaled.
 	    # By using --gfunder, the images are placed behind the page
 	    # but this only works for transparent pages.
-	    $gfx = $page->gfx( $env->{embed} ? 0 : $env->{gfunder} );
+	    $gfx = $page->gfx( $embed ? 0 : $env->{gfunder} );
 	}
 
 	my $border = $env->{border};
 	my @r = ( $x, $y, $x + $env->{iconsz}, $y + $env->{iconsz} );
 	my $ann;
 	$ann = $page->annotation_xx;
-	if ( $env->{embed} ) {
+	if ( $embed ) {
 	    # This always uses the right coordinates.
-	    $ann->fileattachment( $t, -icon => $p, -rect => \@r );
+	    $ann->fileattachment( $t,
+				  -text => "$t $action by pdflink $VERSION",
+				  $embed == 1 ? ( -icon => $p ) : (),
+				  -rect => \@r );
 	}
 	else {
 	    $ann->file( $t, -rect => \@r );
@@ -164,10 +172,10 @@ sub linktargets {
     return unless $pdfname;
 
     # Finish PDF document.
-    if ( $env->{outpdf} ) {
-	warn("Writing PDF ", $env->{outpdf}, " ...\n") if $env->{verbose};
-	$pdf->saveas($env->{outpdf});
-	warn("Wrote: ", $env->{outpdf}, "\n") if $env->{verbose};
+    if ( $env->{output} ) {
+	warn("Writing PDF ", $env->{output}, " ...\n") if $env->{verbose};
+	$pdf->saveas($env->{output});
+	warn("Wrote: ", $env->{output}, "\n") if $env->{verbose};
     }
     elsif ( $did ) {
 	warn("Updating PDF $pdfname...\n") if $env->{verbose};
@@ -190,7 +198,7 @@ sub linkit {
     unless ( $csvname ) {
 	( $csvname = $pdfname ) =~ s/\.pdf$/.csv/i;
     }
-    $env->{outpdf} ||= "__new__.pdf";
+    $env->{output} ||= "__new__.pdf";
 
     warn("Loading PDF $pdfname...\n") if $env->{verbose};
     my $pdf = PDF::API2->open($pdfname)
@@ -244,9 +252,9 @@ sub linkit {
     close $fh;
 
     # Finish PDF document.
-    warn("Writing PDF ", $env->{outpdf}, " ...\n") if $env->{verbose};
-    $pdf->saveas($env->{outpdf});
-    warn("Wrote: ", $env->{outpdf}, "\n") if $env->{verbose};
+    warn("Writing PDF ", $env->{output}, " ...\n") if $env->{verbose};
+    $pdf->saveas($env->{output});
+    warn("Wrote: ", $env->{output}, "\n") if $env->{verbose};
 }
 
 ################ Options and Configuration ################
@@ -278,8 +286,8 @@ sub app_setup {
 
     my $options =
       {
-       outpdf		 => undef,	# output pdf
-       embed		 => undef,	# link or embed
+       output		 => undef,	# output pdf
+       embed		 => undef,	# link, embed or attach
        all		 => 0,		# link all files
        xpos		 => 60,		# position of icons
        ypos		 => 60,		# position of icons
@@ -324,8 +332,9 @@ sub app_setup {
 	 ($clo,
 
 	  ### ADD OPTIONS HERE ###
-	  'pdf=s',
+	  'output|pdf=s',
 	  'embed',
+	  'attach'	=>  sub { $clo->{embed} = 2 },
 	  'all',
 	  'xpos=i',
 	  'ypos=i',
@@ -355,17 +364,17 @@ sub app_setup {
 	$pod2usage->(VERBOSE => 2) if $man;
     }
 
-    if ( @{ $clo->{targets} } ) {
-	@{ $clo->{targets} } = split( /[;,]/, join(":", @{ $clo->{targets} }) );
+    # Plug in command-line options.
+    @{$options}{keys %$clo} = values %$clo;
+
+    if ( @{ $options->{targets} } ) {
+	@{ $options->{targets} } = split( /[;,]/, join(":", @{ $options->{targets} }) );
 	$pod2usage->(1) unless @ARGV;
-	$pod2usage->(1) if $clo->{pdf} && @ARGV > 1;
+	$pod2usage->(1) if $options->{pdf} && @ARGV > 1;
     }
     else {
 	$pod2usage->(1) if @ARGV < 1 || @ARGV > 2;
     }
-
-    # Plug in command-line options.
-    @{$options}{keys %$clo} = values %$clo;
 
     $options;
 }
@@ -392,8 +401,9 @@ pdflink - insert document links in PDF
 Inserts document links in PDF
 
  Options:
-    --pdf=XXX		name of the new PDF (default __new__.pdf)
+    --output=XXX	name of the new PDF (default __new__.pdf)
     --embed		embed the data files instead of linking
+    --attach		attach the data files instead of linking
     --xpos=NN		X-position for links
     --ypos=NN		Y-position for links relative to top
     --iconsize=NN	size of the icons, default 50
@@ -457,6 +467,10 @@ exist on disk.
 With B<--embed>, the target files are embedded (as file attachments)
 to the PDF document. The resultant PDF document will be usable on its
 own, no other files needed.
+
+=item B<--attach>
+
+Like B<--embed>, but no custom icon is supplied.
 
 =item B<--all>
 
@@ -698,18 +712,20 @@ package PDF::API2::Annotation;
 #=item $ant->fileattachment $file, %opts 
 #
 #Defines the annotation as a file attachment with file $file and
-#options %opts (-rect, -border, -content (type), -icon (name)).
+#options %opts (-rect, -border, -content (type), -icon (name), -text (comment)).
 #
 #=cut
 
 sub fileattachment {
     my ( $self, $file, %opts ) = @_;
 
-    my $icon = $opts{-icon} || 'PushPin';
+    my $icon;
+    $icon = $opts{-icon} || 'PushPin' if exists $opts{-icon};
     my @r = @{ $opts{-rect}   } if defined $opts{-rect};
     my @b = @{ $opts{-border} } if defined $opts{-border};
 
     $self->{Subtype} = PDFName('FileAttachment');
+    $self->{T} = PDFStr($opts{"-text"}) if exists($opts{"-text"});
 
     if ( is_utf8($file)) {
 	# URI must be 7-bit ascii
@@ -740,7 +756,7 @@ sub fileattachment {
 
     $self->{Contents} = PDFStr($file);
     # Name will be ignored if there is an AP.
-    $self->{Name} = PDFName($icon) unless ref($icon);
+    $self->{Name} = PDFName($icon) if $icon && !ref($icon);
     # $self->{F} = PDFNum(0b0);
     $self->{C} = PDFArray( map { PDFNum($_) } 1, 1, 0 );
 
