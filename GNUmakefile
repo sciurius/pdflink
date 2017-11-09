@@ -32,26 +32,10 @@ Makefile : Makefile.PL
 
 ################ Extensions ################
 
-PERL := perl
-PROJECT := PDFlink
-TMP_DST := ${HOME}/tmp/${PROJECT}
-
-to_tmp : resources
-	rsync -avH --files-from=MANIFEST    ./ ${TMP_DST}/
-	rsync -avH --files-from=MANIFEST.WX ./ ${TMP_DST}/
-
-to_tmp_cpan :
-	rsync -avH --files-from=MANIFEST.CPAN ./ ${TMP_DST}/
-
-release :
-	${MAKE} -C ../WxChordPro to_src
-	${PERL} Makefile.PL
-	${MAKE} -f Makefile all test dist
-
 # Actualize resources.
 
 LIB := lib/App/PDF/Link
-RES := ${LIB}/res
+RES := res
 PODSELECT := podselect
 
 resources : ${RES}/pod/pdflink.pod

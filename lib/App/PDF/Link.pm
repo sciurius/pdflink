@@ -9,8 +9,8 @@ our $VERSION = '0.20';
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Wed Nov  8 19:34:25 2017
-# Update Count    : 338
+# Last Modified On: Thu Nov  9 08:23:19 2017
+# Update Count    : 339
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -324,6 +324,7 @@ sub app_setup {
  	my $f = __FILE__;
 	if ( $App::Packager::PACKAGED ) {
 	    $f = App::Packager::GetResource("pod/pdflink.pod");
+	    unshift( @_, -noperldoc => 1 );
 	}
         unshift( @_, -input => $f );
 	&Pod::Usage::pod2usage;
