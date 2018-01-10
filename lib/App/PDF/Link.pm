@@ -9,8 +9,8 @@ our $VERSION = '0.20';
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Thu Nov  9 08:23:19 2017
-# Update Count    : 339
+# Last Modified On: Wed Jan 10 13:30:57 2018
+# Update Count    : 340
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -345,7 +345,7 @@ sub app_setup {
 	  'all',
 	  'xpos=i',
 	  'ypos=i',
-	  'iconsize|icon=i',
+	  'iconsz|iconsize|icon=i',
 	  'icons=s%',
 	  'padding=i',
 	  'vertical',

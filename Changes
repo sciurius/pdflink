@@ -2,6 +2,7 @@ Revision history for App-PDF-Link
 
 0.20
 
+	Fix --iconsize.
 	Add support for PAR packaging.
 
 0.19	2017-06-30
