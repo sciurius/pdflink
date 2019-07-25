@@ -32,6 +32,21 @@ Makefile : Makefile.PL
 
 ################ Extensions ################
 
+PERL := perl
+PROJECT := pdflink
+TMP_DST := ${HOME}/tmp/${PROJECT}
+RSYNC_ARGS := -rptgoDvHL
+
+to_tmp : resources
+	rsync ${RSYNC_ARGS} --files-from=MANIFEST    ./ ${TMP_DST}/
+
+to_tmp_cpan :
+	rsync ${RSYNC_ARGS} --files-from=MANIFEST.CPAN ./ ${TMP_DST}/
+
+release : resources
+	${PERL} Makefile.PL
+	${MAKE} -f Makefile all test dist
+
 # Actualize resources.
 
 LIB := lib/App/PDF/Link

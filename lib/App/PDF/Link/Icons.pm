@@ -8,6 +8,7 @@ package App::PDF::Link::Icons;
 
 use Carp;
 use parent qw(Exporter);
+use App::Packager;
 
 our @EXPORT = qw( load_icon_images get_icon );
 

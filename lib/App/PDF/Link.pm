@@ -4,13 +4,13 @@ package App::PDF::Link;
 
 # pdflink -- insert file links in PDF documents
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Tue Feb  5 10:46:41 2019
-# Update Count    : 386
+# Last Modified On: Wed Feb  6 08:21:42 2019
+# Update Count    : 391
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -19,6 +19,7 @@ use strict;
 use warnings;
 use utf8;
 use Carp;
+use App::Packager;
 
 ################ The Process ################
 
@@ -591,6 +592,10 @@ Prints the manual page and exits.
 
 Prints program identification.
 
+=item B<--version>
+
+Prints program identification and exits.
+
 =item B<--verbose>
 
 Provides more verbose information.
@@ -684,7 +689,7 @@ Johan Vromans E<lt>jvromans@squirrel.nlE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2016 Johan Vromans. All rights reserved.
+Copyright 2016,2019 Johan Vromans. All rights reserved.
 
 This module is free software. You can redistribute it and/or
 modify it under the terms of the Artistic License 2.0.
@@ -949,5 +954,19 @@ sub embeddedfile {
 
     return($self);
 }
+
+=head1 AUTHOR
+
+Johan Vromans C<< <jv at CPAN dot org > >>
+
+=head1 SUPPORT
+
+PDFlink development is hosted on GitHub, repository
+L<https://github.com/sciurius/pdflink>.
+
+Please report any bugs or feature requests to the GitHub issue tracker,
+L<https://github.com/sciurius/pdflink/issues>.
+
+=cut
 
 1;
