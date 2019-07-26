@@ -9,8 +9,8 @@ our $VERSION = '0.24';
 # Author          : Johan Vromans
 # Created On      : Thu Sep 15 11:43:40 2016
 # Last Modified By: Johan Vromans
-# Last Modified On: Fri Jul 26 21:03:47 2019
-# Update Count    : 392
+# Last Modified On: Fri Jul 26 22:42:31 2019
+# Update Count    : 394
 # Status          : Unknown, Use with caution!
 
 ################ Common stuff ################
@@ -497,7 +497,8 @@ document and no icons are placed on the pages.
 
 Normally, only files with known types (extensions) are taken into
 account. Currently, these are C<html> for iRealPro, C<mscz> for
-MuseScore and C<mgu> and similar for Band in a Box.
+MuseScore, C<sib> for Sibelius, C<mxl> and C<musicxml> for MusicXML,
+C<abc> for ABC and C<XML> for generic XML documents.
 
 With B<--all>, all files that have matching names will be processed.
 However, files with unknown extensions will get a neutral document
@@ -656,6 +657,14 @@ handled on Android and iPad.
 =item BandInABox
 
 Associated to filename extensions C<mgu>, C<mg1> and so on (Band-In-A-Box document).
+
+=item MXL
+
+Associated with filename extension C<xml> and C<musicxml> (MusicXML).
+
+=item XML
+
+Associated with filename extension C<xml> (generic XML document).
 
 =item Document
 
