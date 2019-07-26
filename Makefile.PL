@@ -15,7 +15,7 @@ my $version = MM->parse_version($master);
 WriteMakefile(
  NAME           => 'App::PDF::Link',
  ABSTRACT       => 'Utility to insert file links into PDF documents',
- VERSION	=> "$version",
+ VERSION	=> "$version.1",
  AUTHOR	        => 'Johan Vromans <jvromans@squirrel.nl>',
 
  INSTALLDIRS	=> 'site',
@@ -25,6 +25,7 @@ WriteMakefile(
 		   },
 
  PREREQ_PM      => {
+		    'App::Packager' => 1.430,
 		    'PDF::API2'    => 2.029,
 		    'Text::CSV_XS' => 0,
 		   },
