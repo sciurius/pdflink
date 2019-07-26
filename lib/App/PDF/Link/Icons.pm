@@ -23,6 +23,8 @@ sub _load_icon_images {
 	html	    => 'builtin:iRealPro',
 	sib	    => 'builtin:Sibelius',
 	xml	    => 'builtin:XML',
+	mxl	    => 'builtin:MXL',
+	musicxml    => 'builtin:MXL',
 	abc	    => 'builtin:ABC',
       );
 

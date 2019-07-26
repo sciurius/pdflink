@@ -1,5 +1,9 @@
 Revision history for App-PDF-Link
 
+0.24	2019-07-26
+
+	Use musix XML icon for mxl and musicxml; use generic XML icon for xml.
+	
 0.23	2019-07-25
 
 	Use App::Packager for resources.

@@ -11,5 +11,6 @@
 --module=App::PDF::Link::Icons::PNG
 --module=App::PDF::Link::Icons::Sibelius
 --module=App::PDF::Link::Icons::XML
+--module=App::PDF::Link::Icons::MXL
 --addfile=../../res;res
 --cachedeps=pdflink.pp.deps
